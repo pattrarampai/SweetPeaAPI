@@ -60,7 +60,7 @@ public class PurchaseOrderController {
     @GetMapping(value = "/accept")
     public List<PurchaseOrder> getAccept(@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate) throws ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-        return purchaseOrderRepository.findByDateBetween(formatter.parse(startDate),formatter.parse(endDate));
+        return purchaseOrderRepository.findByDateBetweenAndStatus(formatter.parse(startDate),formatter.parse(endDate), "CONFIRM");
     }
 
     @PostMapping(value = "/{id}/accept")
