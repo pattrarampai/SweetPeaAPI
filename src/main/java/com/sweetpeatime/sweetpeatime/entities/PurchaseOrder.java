@@ -9,9 +9,8 @@ import java.util.List;
 
 import javax.persistence.*;
 
-import org.springframework.format.annotation.DateTimeFormat;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Data
 @Builder
@@ -31,8 +30,8 @@ public class PurchaseOrder {
     private Double total;
     private Double transportationFee;
 
-    // @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    // @JoinColumn(name = "PurchaseOrderId")
-    // private List<PurchaseOrderDetail> purchaseOrderDetail;
-    
+    @JsonManagedReference
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "purchaseOrderId")
+    private List<PurchaseOrderDetail> purchaseOrderDetail;
 }

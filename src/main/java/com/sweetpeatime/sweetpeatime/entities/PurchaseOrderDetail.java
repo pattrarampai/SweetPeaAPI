@@ -4,7 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Date;
+
 import javax.persistence.*;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Data
 @Builder
@@ -19,10 +25,17 @@ public class PurchaseOrderDetail {
     private Integer id;
     private Integer quantity;
     private String vehicle;
-    
-    // @JsonIgnore
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "PurchaseOrderId")
-    // private PurchaseOrder purchaseOrder;
+    private Integer flowerId;
+    private Integer packId;
+    private Integer supplierId;
+    private Integer priceId;
+    private Integer floristId;
+    @JsonFormat(pattern="yyyy-MM-dd", timezone="Asia/Bangkok")
+    private Date lot;
+
+    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "purchaseOrderId")
+    private PurchaseOrder purchaseOrder;
     
 }
