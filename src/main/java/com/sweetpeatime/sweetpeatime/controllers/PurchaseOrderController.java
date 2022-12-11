@@ -25,6 +25,9 @@ public class PurchaseOrderController {
     @Autowired
     private PurchaseOrderRepository purchaseOrderRepository;
 
+    @Autowired
+    private PurchaseOrderDetailRepository purchaseOrderDetailRepository;
+
     @PostMapping(value = "/create")
     public void create(@RequestBody PurchaseOrder req) throws ParseException {
         req.setStatus("DRAFT");
@@ -38,10 +41,13 @@ public class PurchaseOrderController {
     }
 
     @PostMapping(value = "/{id}/edit")
-    public void edit(@PathVariable("id") Integer id) throws ParseException {
+    public void edit(@PathVariable("id") Integer id, @RequestBody PurchaseOrder req) throws ParseException {
         PurchaseOrder purchaseOrder = purchaseOrderRepository.findByIdAndStatus(id, "DRAFT");
-        purchaseOrder.setStatus("CONFIRM");
-        purchaseOrderRepository.save(purchaseOrder);
+        req.setId(purchaseOrder.getId());
+        req.setStatus(purchaseOrder.getStatus());
+        List<PurchaseOrderDetail> purchaseOrderDetail = purchaseOrderDetailRepository.findByPurchaseOrderId(id);
+        purchaseOrderDetailRepository.deleteAll(purchaseOrderDetail);
+        purchaseOrderRepository.save(req);
     }
 
     @GetMapping(value = "/remind")
