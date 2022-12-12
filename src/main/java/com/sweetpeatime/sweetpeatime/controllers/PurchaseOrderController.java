@@ -70,7 +70,7 @@ public class PurchaseOrderController {
     }
 
     @PostMapping(value = "/{id}/accept")
-    public void postAccept(@RequestBody PurchaseOrder req) throws ParseException {
+    public void postAccept(@PathVariable("id") Integer id, @RequestBody PurchaseOrder req) throws ParseException {
         req.setStatus("DRAFT");
         purchaseOrderRepository.save(req);
     }

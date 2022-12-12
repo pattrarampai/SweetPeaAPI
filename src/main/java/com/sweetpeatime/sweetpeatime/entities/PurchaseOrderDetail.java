@@ -23,15 +23,15 @@ public class PurchaseOrderDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    private Integer quantity;
-    private String vehicle;
     private Integer flowerId;
+    private Integer quantity;
     private Integer packId;
     private Integer supplierId;
     private Integer priceId;
-    private Integer floristId;
     @JsonFormat(pattern="yyyy-MM-dd", timezone="Asia/Bangkok")
     private Date lot;
+    private Integer floristId;
+    private Integer receivedQty;
 
     @JsonBackReference
     @ManyToOne(fetch = FetchType.LAZY)
