@@ -5,17 +5,11 @@ import com.sweetpeatime.sweetpeatime.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.PersistenceContext;
-import javax.persistence.Query;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Calendar;
+
 import java.util.Date;
 import java.util.List;
-import javax.persistence.EntityManager;
-import java.util.stream.Collectors;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:4200")
@@ -29,7 +23,7 @@ public class PurchaseOrderController {
     private PurchaseOrderDetailRepository purchaseOrderDetailRepository;
 
     @PostMapping(value = "/create")
-    public void create(@RequestBody PurchaseOrder req) throws ParseException {
+    public void create(@RequestBody PurchaseOrder req) {
         req.setStatus("DRAFT");
         for (int i = 0; i < req.getPurchaseOrderDetail().size(); i++) {
             req.getPurchaseOrderDetail().get(i).setReceivedQty(0);
@@ -38,14 +32,19 @@ public class PurchaseOrderController {
     }
 
     @GetMapping(value = "/search")
-    public List<PurchaseOrder> search(@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate) throws ParseException {
+    public List<PurchaseOrder> search(@RequestParam("startDate") String startDate,
+            @RequestParam("endDate") String endDate) throws ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-        return purchaseOrderRepository.findByDateBetween(formatter.parse(startDate),formatter.parse(endDate));
+        return purchaseOrderRepository.findByDateBetween(formatter.parse(startDate), formatter.parse(endDate));
     }
 
     @PostMapping(value = "/{id}/edit")
-    public void edit(@PathVariable("id") Integer id, @RequestBody PurchaseOrder req) throws ParseException {
-        PurchaseOrder purchaseOrder = purchaseOrderRepository.findByIdAndStatus(id, "DRAFT");
+    public void edit(@PathVariable("id") Integer id, @RequestBody PurchaseOrder req) throws Exception {
+        PurchaseOrder purchaseOrder = purchaseOrderRepository.findById(id)
+                .orElseThrow(() -> new Exception("Your Purchase Order can't be found"));
+        if (!purchaseOrder.getStatus().equals("DRAFT")) {
+            throw new Exception("Your Purchase Order is Invalid");
+        }
         req.setId(purchaseOrder.getId());
         req.setStatus(purchaseOrder.getStatus());
         for (int i = 0; i < req.getPurchaseOrderDetail().size(); i++) {
@@ -63,21 +62,37 @@ public class PurchaseOrderController {
     }
 
     @PostMapping(value = "/{id}/confirm")
-    public void confirm(@PathVariable("id") Integer id) throws ParseException {
-        PurchaseOrder purchaseOrder = purchaseOrderRepository.findByIdAndStatus(id, "DRAFT");
+    public void confirm(@PathVariable("id") Integer id) throws Exception {
+        PurchaseOrder purchaseOrder = purchaseOrderRepository.findById(id)
+                .orElseThrow(() -> new Exception("Your Purchase Order can't be found"));
+        if (!purchaseOrder.getStatus().equals("DRAFT")) {
+            throw new Exception("Your Purchase Order is Invalid");
+        }
         purchaseOrder.setStatus("CONFIRM");
         purchaseOrderRepository.save(purchaseOrder);
     }
 
     @GetMapping(value = "/accept")
-    public List<PurchaseOrder> getAccept(@RequestParam("startDate") String startDate, @RequestParam("endDate") String endDate) throws ParseException {
+    public List<PurchaseOrder> getAccept(@RequestParam("startDate") String startDate,
+            @RequestParam("endDate") String endDate) throws ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-        return purchaseOrderRepository.findByDateBetweenAndStatus(formatter.parse(startDate),formatter.parse(endDate), "CONFIRM");
+        return purchaseOrderRepository.findByDateBetweenAndStatus(formatter.parse(startDate), formatter.parse(endDate),
+                "CONFIRM");
     }
 
-    @PostMapping(value = "/{id}/accept")
-    public void postAccept(@PathVariable("id") Integer id, @RequestBody PurchaseOrder req) throws ParseException {
-        req.setStatus("DRAFT");
+    @PostMapping(value = "/{id}/accept/{status}")
+    public void postAccept(@PathVariable("id") Integer id, @PathVariable("status") String status,
+            @RequestBody PurchaseOrder req) throws Exception {
+        if (!(status.equals("COMPLETED") || status.equals("PARTIAL_COMPLETED"))) {
+            throw new Exception("Your Status is Invalid");
+        }
+        PurchaseOrder purchaseOrder = purchaseOrderRepository.findById(id).orElseThrow(() -> new Exception("Your Purchase Order can't be found"));
+        if (!(purchaseOrder.getStatus().equals("CONFIRM") || purchaseOrder.getStatus().equals("PARTIAL_COMPLETED"))) {
+            throw new Exception("Your Purchase Order is Invalid");
+        }
+        // PurchaseOrder purchaseOrder =
+        // purchaseOrderRepository.findById(id).orElseThrow(() -> new
+        // DataNotFoundException("cannot find profile id : " + profileId));;
         purchaseOrderRepository.save(req);
     }
 
