@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -23,6 +22,9 @@ public class PurchaseOrderController {
 
     @Autowired
     private PurchaseOrderDetailRepository purchaseOrderDetailRepository;
+
+    @Autowired
+    private StockReceivedRepository stockReceivedRepository;
 
     @PostMapping(value = "/create")
     public void create(@RequestBody PurchaseOrder req) {
@@ -98,6 +100,21 @@ public class PurchaseOrderController {
             PurchaseOrderDetail purchaseOrderDetail = purchaseOrderDetailRepository
                     .findById(purchaseOrderAcceptReq.getPurchaseOrderDetailId())
                     .orElseThrow(() -> new Exception("Your Purchase Order Detail can't be found"));
+
+            StockReceived stockReceived = stockReceivedRepository.findByFlowerIdAndLot(purchaseOrderDetail.getFlowerId(), purchaseOrderDetail.getLot());
+            if (stockReceived != null) {
+                stockReceived.setQuantity(stockReceived.getQuantity() + (purchaseOrderAcceptReq.getReceivedQty() - purchaseOrderDetail.getReceivedQty()));  
+            } else {
+                stockReceived = new StockReceived();
+                stockReceived.setFlowerId(purchaseOrderDetail.getFlowerId());
+                stockReceived.setQuantity(purchaseOrderDetail.getQuantity());
+                stockReceived.setLot(purchaseOrderDetail.getLot());
+                stockReceived.setFlowerPriceId(purchaseOrderDetail.getPriceId());
+                stockReceived.setFloristId(purchaseOrderDetail.getFloristId());
+                stockReceived.setDeleteQty(0);
+            }
+            stockReceivedRepository.save(stockReceived);
+
             purchaseOrderDetail.setReceivedQty(purchaseOrderAcceptReq.getReceivedQty());
             purchaseOrderDetailRepository.save(purchaseOrderDetail);
         }
