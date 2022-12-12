@@ -31,6 +31,9 @@ public class PurchaseOrderController {
     @PostMapping(value = "/create")
     public void create(@RequestBody PurchaseOrder req) throws ParseException {
         req.setStatus("DRAFT");
+        for (int i = 0; i < req.getPurchaseOrderDetail().size(); i++) {
+            req.getPurchaseOrderDetail().get(i).setReceivedQty(0);
+        }
         purchaseOrderRepository.save(req);
     }
 
@@ -45,6 +48,9 @@ public class PurchaseOrderController {
         PurchaseOrder purchaseOrder = purchaseOrderRepository.findByIdAndStatus(id, "DRAFT");
         req.setId(purchaseOrder.getId());
         req.setStatus(purchaseOrder.getStatus());
+        for (int i = 0; i < req.getPurchaseOrderDetail().size(); i++) {
+            req.getPurchaseOrderDetail().get(i).setReceivedQty(0);
+        }
         List<PurchaseOrderDetail> purchaseOrderDetail = purchaseOrderDetailRepository.findByPurchaseOrderId(id);
         purchaseOrderDetailRepository.deleteAll(purchaseOrderDetail);
         purchaseOrderRepository.save(req);
