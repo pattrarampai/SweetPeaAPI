@@ -2,12 +2,14 @@ package com.sweetpeatime.sweetpeatime.controllers;
 
 import com.sweetpeatime.sweetpeatime.entities.*;
 import com.sweetpeatime.sweetpeatime.repositories.*;
+import com.sweetpeatime.sweetpeatime.request.PurchaseOrderAcceptReq;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -82,18 +84,26 @@ public class PurchaseOrderController {
 
     @PostMapping(value = "/{id}/accept/{status}")
     public void postAccept(@PathVariable("id") Integer id, @PathVariable("status") String status,
-            @RequestBody PurchaseOrder req) throws Exception {
+            @RequestBody List<PurchaseOrderAcceptReq> req) throws Exception {
         if (!(status.equals("COMPLETED") || status.equals("PARTIAL_COMPLETED"))) {
             throw new Exception("Your Status is Invalid");
         }
-        PurchaseOrder purchaseOrder = purchaseOrderRepository.findById(id).orElseThrow(() -> new Exception("Your Purchase Order can't be found"));
+        PurchaseOrder purchaseOrder = purchaseOrderRepository.findById(id)
+                .orElseThrow(() -> new Exception("Your Purchase Order can't be found"));
         if (!(purchaseOrder.getStatus().equals("CONFIRM") || purchaseOrder.getStatus().equals("PARTIAL_COMPLETED"))) {
             throw new Exception("Your Purchase Order is Invalid");
         }
-        // PurchaseOrder purchaseOrder =
-        // purchaseOrderRepository.findById(id).orElseThrow(() -> new
-        // DataNotFoundException("cannot find profile id : " + profileId));;
-        purchaseOrderRepository.save(req);
+
+        for (PurchaseOrderAcceptReq purchaseOrderAcceptReq : req) {
+            PurchaseOrderDetail purchaseOrderDetail = purchaseOrderDetailRepository
+                    .findById(purchaseOrderAcceptReq.getPurchaseOrderDetailId())
+                    .orElseThrow(() -> new Exception("Your Purchase Order Detail can't be found"));
+            purchaseOrderDetail.setReceivedQty(purchaseOrderAcceptReq.getReceivedQty());
+            purchaseOrderDetailRepository.save(purchaseOrderDetail);
+        }
+
+        purchaseOrder.setStatus(status);
+        purchaseOrderRepository.save(purchaseOrder);
     }
 
 }
