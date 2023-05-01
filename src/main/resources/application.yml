@@ -1,14 +1,15 @@
 spring:
   datasource:
      driverClassName: com.mysql.jdbc.Driver
-     url: jdbc:mysql://localhost:3306/SweetPeaTimes
+     url: jdbc:mysql://35.222.160.131:3306/SweetPeaTimes
      username: root
-     password: Fah@232538
-#     jpa:
-#        hibernate.ddl-auto: update
-#        generate-ddl: true
-#        show-swl: true
-#        hibernate:
-#           naming:
-#               physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-#               implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+     password: 12345678
+     jpa:
+        hibernate.ddl-auto: none
+        generate-ddl: false
+        show-swl: true
+        hibernate:
+           dialect: org.hibernate.dialect.MySQLDialect
+           naming:
+               physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+               implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl

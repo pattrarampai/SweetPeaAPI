@@ -32,6 +32,19 @@ public class PurchaseOrderDetail {
     private Date lot;
     private Integer floristId;
     private Integer receivedQty;
+    private Double price;
+    private Double weight;
+    private String vehicle; // BIKE, CAR
+    private Double transportationFree;// >> 300,300
+
+//    private Double // transportation > เอาน้ำหนักรวมของ 1 ช่าง > หาว่าจะส่งโดยมอเตอร์ไซต์หรือรถยนต์ตามน้ำหนักรวม >
+//    น้ำหนักรวม <= 10 >> มอเตอร์ไซต์
+//    น้ำหนักรวม > 10 >> รถยนต์
+
+//    BIKE > 150
+//    CAR > 300
+
+
 
     @JsonBackReference
     @ManyToOne(fetch = FetchType.LAZY)

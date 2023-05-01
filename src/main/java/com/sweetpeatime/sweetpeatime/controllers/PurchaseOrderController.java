@@ -74,6 +74,7 @@ public class PurchaseOrderController {
         }
         purchaseOrder.setStatus("CONFIRM");
         purchaseOrderRepository.save(purchaseOrder);
+        // TODO init after confirm PO
     }
 
     @GetMapping(value = "/accept")

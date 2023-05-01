@@ -10,5 +10,6 @@ import com.sweetpeatime.sweetpeatime.entities.PurchaseOrderDetail;
 @Repository
 public interface PurchaseOrderDetailRepository extends JpaRepository<PurchaseOrderDetail, Integer> {
 
+    List<PurchaseOrderDetail> findByPurchaseOrderIdAndFloristIdAndFlowerId(Integer id, Integer floristId, Integer flowerId);
     List<PurchaseOrderDetail> findByPurchaseOrderId(Integer id);
 }

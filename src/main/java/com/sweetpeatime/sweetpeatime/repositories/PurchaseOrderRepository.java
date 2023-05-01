@@ -16,5 +16,7 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, In
 
     List<PurchaseOrder> findByStatusAndDate(String status, Date date);
 
-    List<PurchaseOrder> findByDateBetweenAndStatus(Date startDate, Date endDate, String status);    
+    List<PurchaseOrder> findByDateBetweenAndStatus(Date startDate, Date endDate, String status);
+
+    List<PurchaseOrder> findByStatus(String status);
 }
