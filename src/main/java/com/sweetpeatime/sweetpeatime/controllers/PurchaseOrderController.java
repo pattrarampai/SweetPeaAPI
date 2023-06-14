@@ -13,8 +13,8 @@ import java.util.Date;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping(value = "/purchase-order")
+@CrossOrigin(origins = "http://localhost:4200")
 public class PurchaseOrderController {
 
     @Autowired
