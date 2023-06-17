@@ -18,7 +18,7 @@ import java.util.List;
 public class SupplierController {
 
     @Autowired
-    SupplierRepository supplierRepository;
+    private  SupplierRepository supplierRepository;
 
     @PersistenceContext
     EntityManager entityManager;

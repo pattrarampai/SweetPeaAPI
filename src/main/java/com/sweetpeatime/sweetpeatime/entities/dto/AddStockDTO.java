@@ -1,4 +1,4 @@
-package com.sweetpeatime.sweetpeatime.dto;
+package com.sweetpeatime.sweetpeatime.entities.dto;
 
 import com.sweetpeatime.sweetpeatime.entities.Florist;
 import com.sweetpeatime.sweetpeatime.entities.Flower;

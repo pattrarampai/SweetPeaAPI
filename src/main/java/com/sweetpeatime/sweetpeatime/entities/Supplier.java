@@ -13,12 +13,12 @@ public class Supplier {
     private String name;
     @Column(name = "address")
     private String address;
-    @Column(name = "defaultActive")
-    private Integer defaultActive;
+    @Column(name = "default_active")
+    private String defaultActive;
 
     public Supplier(){}
 
-    public Supplier(Integer id, String name, String address, Integer defaultActive) {
+    public Supplier(Integer id, String name, String address, String defaultActive) {
         this.id = id;
         this.name = name;
         this.address = address;
@@ -49,11 +49,11 @@ public class Supplier {
         this.address = address;
     }
 
-    public Integer getDefaultActive() {
+    public String getDefaultActive() {
         return defaultActive;
     }
 
-    public void setDefaultActive(Integer defaultActive) {
+    public void setDefaultActive(String defaultActive) {
         this.defaultActive = defaultActive;
     }
 }
