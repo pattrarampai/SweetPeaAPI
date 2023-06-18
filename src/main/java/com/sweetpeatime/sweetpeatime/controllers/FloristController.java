@@ -1,17 +1,15 @@
 package com.sweetpeatime.sweetpeatime.controllers;
-
 import com.sweetpeatime.sweetpeatime.entities.Florist;
 import com.sweetpeatime.sweetpeatime.entities.FloristFee;
 import com.sweetpeatime.sweetpeatime.repositories.FloristFeeRepository;
 import com.sweetpeatime.sweetpeatime.repositories.FloristRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
+import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.EntityManager;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:4200")
