@@ -3,7 +3,7 @@ package com.sweetpeatime.sweetpeatime.entities;
 import javax.persistence.*;
 
 @Entity
-@Table(name="Supplier")
+@Table(name="Supplier", schema = "targetSchemaName")
 public class Supplier {
 
     @Id
@@ -13,12 +13,12 @@ public class Supplier {
     private String name;
     @Column(name = "address")
     private String address;
-    @Column(name = "default_active")
-    private String defaultActive;
+    @Column(name = "defaultActive")
+    private Integer defaultActive;
 
     public Supplier(){}
 
-    public Supplier(Integer id, String name, String address, String defaultActive) {
+    public Supplier(Integer id, String name, String address, Integer defaultActive) {
         this.id = id;
         this.name = name;
         this.address = address;
@@ -49,11 +49,11 @@ public class Supplier {
         this.address = address;
     }
 
-    public String getDefaultActive() {
+    public Integer getDefaultActive() {
         return defaultActive;
     }
 
-    public void setDefaultActive(String defaultActive) {
+    public void setDefaultActive(Integer defaultActive) {
         this.defaultActive = defaultActive;
     }
 }
