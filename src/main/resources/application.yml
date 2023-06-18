@@ -1,7 +1,7 @@
 spring:
   datasource:
      driverClassName: com.mysql.jdbc.Driver
-     url: jdbc:mysql://localhost:3306/SweetPeaTimes
+     url: jdbc:mysql://35.222.160.131:3306/SweetPeaTimes
      username: root
      password: 12345678
 #     jpa:
