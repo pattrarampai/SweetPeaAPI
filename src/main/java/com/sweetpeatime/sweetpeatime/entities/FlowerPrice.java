@@ -11,6 +11,8 @@ public class FlowerPrice {
     private String saleUnit;
     private Integer price;
     private Flower flower;
+    private Integer packId;
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -54,5 +56,13 @@ public class FlowerPrice {
 
     public void setFlower(Flower flower) {
         this.flower = flower;
+    }
+
+    public Integer getPackId() {
+        return packId;
+    }
+
+    public void setPackId(Integer packId) {
+        this.packId = packId;
     }
 }
