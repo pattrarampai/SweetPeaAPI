@@ -1,7 +1,10 @@
 package com.sweetpeatime.sweetpeatime.entities;
 
+import lombok.NoArgsConstructor;
+
 import javax.persistence.*;
 import java.util.Date;
+@NoArgsConstructor
 @Entity
 @Table(name="StockLot")
 public class StockLot {

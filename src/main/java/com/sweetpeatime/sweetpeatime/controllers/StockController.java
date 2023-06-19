@@ -1,8 +1,8 @@
 package com.sweetpeatime.sweetpeatime.controllers;
 
-import com.sweetpeatime.sweetpeatime.dto.AddStockDTO;
-import com.sweetpeatime.sweetpeatime.dto.ChangeStockDTO;
-import com.sweetpeatime.sweetpeatime.dto.DeleteStockDTO;
+import com.sweetpeatime.sweetpeatime.entities.dto.AddStockDTO;
+import com.sweetpeatime.sweetpeatime.entities.dto.ChangeStockDTO;
+import com.sweetpeatime.sweetpeatime.entities.dto.DeleteStockDTO;
 import com.sweetpeatime.sweetpeatime.entities.*;
 import com.sweetpeatime.sweetpeatime.repositories.*;
 import com.sweetpeatime.sweetpeatime.wrapper.StockWrapper;
@@ -250,7 +250,7 @@ public class StockController {
                 boolean recal = false;
                 List<FlowerFormulaDetail> formulaDetails = this.flowerFormulaDetailRepository.findAllByFlowerFormulaId(promotionDetail.getFlowerFormula().getId());
                 for(FlowerFormulaDetail formulaDetail: formulaDetails){
-                    if(formulaDetail.getFlower().getFlowerId().equals(ds.getFlowerId())){
+                    if(formulaDetail.getFlower().getId().equals(ds.getFlowerId())){
                         recal = true;
                         int available = formulaDetail.getQuantity() * promotionDetail.getQuantity();
                         if (dlQuantity >= available){
@@ -290,7 +290,7 @@ public class StockController {
     @PostMapping("/addStock")
     public void addStockQuantity(@RequestBody List<AddStockDTO> addStock) throws ParseException {
         for (AddStockDTO s: addStock) {
-            FlowerPrice flowerPrice = this.flowerPriceRepository.findByFlowerId(s.getFlower().getFlowerId());
+            FlowerPrice flowerPrice = this.flowerPriceRepository.findByFlowerId(s.getFlower().getId());
             if (flowerPrice == null) {
                 flowerPrice = new FlowerPrice();
                 flowerPrice.setFlower(s.getFlower());
@@ -298,7 +298,7 @@ public class StockController {
             flowerPrice.setPrice(s.getPrice());
             this.flowerPriceRepository.saveAndFlush(flowerPrice);
 
-            List<Stock> oldStock = this.stockRepository.findAllByQuantityLessThanAndFlowerIdOrderByLotAsc(0, s.getFlower().getFlowerId());
+            List<Stock> oldStock = this.stockRepository.findAllByQuantityLessThanAndFlowerIdOrderByLotAsc(0, s.getFlower().getId());
             Integer quantity = s.getQuantity();
             if (oldStock != null) {
                 for (Stock o : oldStock) {
@@ -316,7 +316,7 @@ public class StockController {
                 }
             }
 
-            Stock stock = this.stockRepository.findStockByFlowerIdAndLotAndFloristId(s.getFlower().getFlowerId(), dateFormat.parse(s.getLot()), s.getFlorist().getId());
+            Stock stock = this.stockRepository.findStockByFlowerIdAndLotAndFloristId(s.getFlower().getId(), dateFormat.parse(s.getLot()), s.getFlorist().getId());
             if (stock == null) {
                 stock = new Stock();
                 stock.setFlower(s.getFlower());
@@ -413,7 +413,7 @@ public class StockController {
                 i = i +1;
                 chkFlower:
                 for (StockRemainDto stockRemainDto : stockRemainDtoList) {
-                    if (stockRemainDto.getId().equals(formulaDetail.getFlower().getFlowerId())) {
+                    if (stockRemainDto.getId().equals(formulaDetail.getFlower().getId())) {
                         chkSize = chkSize + 1;
                         availableQuantity = stockRemainDto.getRemainQuantity() / formulaDetail.getQuantity();
                         availableQuantitySum = Math.min(availableQuantitySum, availableQuantity);
@@ -444,7 +444,7 @@ public class StockController {
                 }
 
                 if (i > 1) {
-                    List<Stock> stockList1 = this.stockRepository.findAllByFlowerIdAndLotGreaterThanEqualAndLotLessThanEqualAndFloristId(formulaDetail.getFlower().getFlowerId(),dateFrom, dateTo, floristId);
+                    List<Stock> stockList1 = this.stockRepository.findAllByFlowerIdAndLotGreaterThanEqualAndLotLessThanEqualAndFloristId(formulaDetail.getFlower().getId(),dateFrom, dateTo, floristId);
                     for(Stock stock: stockList1){
                         stockAvailable = stock.getQuantity();
                     }
@@ -569,7 +569,7 @@ public class StockController {
                 int diffDays = (int) (chkExp / (24 * 60 * 60 * 1000));
 
                 //หา Life Time ของดอกไม้ที่ใกล้หมดอายุ และ ชนิดของดอกไม้
-                Flower flower = this.flowerRepository.findAllById(stock.getFlower().getFlowerId());
+                Flower flower = this.flowerRepository.findAllById(stock.getFlower().getId());
                 flowerLifeTime = flower.getLifeTime();
                 typeFlower = flower.getFlowerType();
 
@@ -578,7 +578,7 @@ public class StockController {
                     if (expired > 0 && expired <= 3) {
                         newStocks.add(stock);
                         StockRemainDto stockRemainDto = new StockRemainDto();
-                        stockRemainDto.setId(stock.getFlower().getFlowerId());
+                        stockRemainDto.setId(stock.getFlower().getId());
                         stockRemainDto.setFlowerName(stock.getFlower().getFlowerName());
                         stockRemainDto.setRemainQuantity(stock.getQuantity());
                         stockRemainDto.setFloristId(stock.getFlorist().getId());
@@ -595,7 +595,7 @@ public class StockController {
                     if (expired > 0 && expired <= expiredFlower) {
                         newStocks.add(stock);
                         StockRemainDto stockRemainDto = new StockRemainDto();
-                        stockRemainDto.setId(stock.getFlower().getFlowerId());
+                        stockRemainDto.setId(stock.getFlower().getId());
                         stockRemainDto.setFlowerName(stock.getFlower().getFlowerName());
                         stockRemainDto.setRemainQuantity(stock.getQuantity());
                         stockRemainDto.setFloristId(stock.getFlorist().getId());
@@ -614,7 +614,7 @@ public class StockController {
             List<FlowerFormulaDetail> flowerList = this.flowerFormulaDetailRepository.findAllByFlowerFormulaId(promotionDetail.getFlowerFormula().getId());
             for (StockRemainDto stockRemainDto1 : stockRemainDtos){
                 for (FlowerFormulaDetail formulaDetail: flowerList){
-                    if (stockRemainDto1.getId().equals(formulaDetail.getFlower().getFlowerId()) && promotionDetail.getFlorist().getId().equals(stockRemainDto1.getFloristId())){
+                    if (stockRemainDto1.getId().equals(formulaDetail.getFlower().getId()) && promotionDetail.getFlorist().getId().equals(stockRemainDto1.getFloristId())){
                         int remains = stockRemainDto1.getRemainQuantity() - (formulaDetail.getQuantity() * promotionDetail.getQuantity());
                         stockRemainDto1.setRemainQuantity(remains);
                     }
@@ -670,7 +670,7 @@ public class StockController {
                     chkFlower:
                     for (StockRemainDto stockRemainDto1 : stockRemainDtos) {
                         if (stockRemainDto1.getFloristId().equals(florist1.getId())){
-                            if (ff.getFlower().getFlowerId().equals(stockRemainDto1.getId())) {
+                            if (ff.getFlower().getId().equals(stockRemainDto1.getId())) {
                                 chkSize = chkSize + 1;
                                 availableQuantity = stockRemainDto1.getRemainQuantity() / ff.getQuantity();
                                 lot = stockRemainDto1.getLot();
@@ -751,7 +751,7 @@ public class StockController {
                     List<FlowerFormulaDetail> formulaDetails = this.flowerFormulaDetailRepository.findAllByFlowerFormulaId(promotionDetail.getFlowerFormula().getId());
                     for(FlowerFormulaDetail formulaDetail: formulaDetails){
                         for(StockRemainDto stockRemainDto1 : stockRemainDtos){
-                            if (stockRemainDto1.getId().equals(formulaDetail.getFlower().getFlowerId()) && promotionDetail2.getFlorist().getId().equals(stockRemainDto1.getFloristId())){
+                            if (stockRemainDto1.getId().equals(formulaDetail.getFlower().getId()) && promotionDetail2.getFlorist().getId().equals(stockRemainDto1.getFloristId())){
                                 remain = stockRemainDto1.getRemainQuantity() - (formulaDetail.getQuantity() * promotionDetail2.getQuantity());
                                 stockRemainDto1.setRemainQuantity(remain);
                             }
@@ -766,7 +766,7 @@ public class StockController {
                 loop = 0;
                 for(FlowerFormulaDetail formulaDetail: formulaDetails){
                     for(StockRemainDto stockRemainDto1 : stockRemainDtos){
-                        if (stockRemainDto1.getId().equals(formulaDetail.getFlower().getFlowerId()) && promotionDetail.getFlorist().getId().equals(stockRemainDto1.getFloristId())){
+                        if (stockRemainDto1.getId().equals(formulaDetail.getFlower().getId()) && promotionDetail.getFlorist().getId().equals(stockRemainDto1.getFloristId())){
                             loop = loop + 1;
                             remain = stockRemainDto1.getRemainQuantity() - (formulaDetail.getQuantity() * promotionDetail.getQuantity());
                             available = stockRemainDto1.getRemainQuantity() / formulaDetail.getQuantity();
@@ -781,7 +781,7 @@ public class StockController {
                     if ((flag1.equals("Y") && flag2.equals("Y")) && (formulaDetails.size() == loop)){
                         for(FlowerFormulaDetail formulaDetail1: formulaDetails) {
                             for (StockRemainDto stockRemainDto1 : stockRemainDtos) {
-                                if (stockRemainDto1.getId().equals(formulaDetail1.getFlower().getFlowerId()) && promotionDetail.getFlorist().getId().equals(stockRemainDto1.getFloristId())) {
+                                if (stockRemainDto1.getId().equals(formulaDetail1.getFlower().getId()) && promotionDetail.getFlorist().getId().equals(stockRemainDto1.getFloristId())) {
                                     remain = stockRemainDto1.getRemainQuantity() - (formulaDetail1.getQuantity() * promotionDetail.getQuantity());
                                     stockRemainDto1.setRemainQuantity(remain);
                                 }
@@ -794,7 +794,7 @@ public class StockController {
                         promotionDetail.setQuantity(availableTotal);
                         for(FlowerFormulaDetail formulaDetail2: formulaDetails) {
                             for (StockRemainDto stockRemainDto1 : stockRemainDtos) {
-                                if (stockRemainDto1.getId().equals(formulaDetail2.getFlower().getFlowerId()) && promotionDetail.getFlorist().getId().equals(stockRemainDto1.getFloristId())) {
+                                if (stockRemainDto1.getId().equals(formulaDetail2.getFlower().getId()) && promotionDetail.getFlorist().getId().equals(stockRemainDto1.getFloristId())) {
                                     remain = stockRemainDto1.getRemainQuantity() - (formulaDetail2.getQuantity() * promotionDetail.getQuantity());
                                     stockRemainDto1.setRemainQuantity(remain);
                                 }

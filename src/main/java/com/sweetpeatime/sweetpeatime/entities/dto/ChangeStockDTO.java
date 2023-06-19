@@ -1,4 +1,4 @@
-package com.sweetpeatime.sweetpeatime.dto;
+package com.sweetpeatime.sweetpeatime.entities.dto;
 
 public class ChangeStockDTO {
     private String formulaName;

@@ -94,7 +94,7 @@ public class FlowerFormulaDetailController {
         Calendar lotDate = Calendar.getInstance();
 
         for (FlowerFormulaDetail f: flowerFormulaDetails) {
-            stocks = this.stockRepository.findAllByFlowerIdAndFloristIdOrderByLotAsc(f.getFlower().getFlowerId(), floristId);
+            stocks = this.stockRepository.findAllByFlowerIdAndFloristIdOrderByLotAsc(f.getFlower().getId(), floristId);
             for (Stock s: stocks)
             {
                 lotDate.setTime(s.getLot());

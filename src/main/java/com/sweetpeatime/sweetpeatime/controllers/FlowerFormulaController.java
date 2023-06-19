@@ -230,7 +230,7 @@ public class FlowerFormulaController {
         for (FlowerFormula flowerFormula: flowerFormulas) {
             List<FlowerFormulaDetail> flowerFormulaDetails = this.flowerFormulaDetailRepository.findAllByFlowerFormulaId(flowerFormula.getId());
             for (FlowerFormulaDetail flowerFormulaDetail: flowerFormulaDetails) {
-                FlowerPrice flowerPrice = this.flowerPriceRepository.findByFlowerId(flowerFormulaDetail.getFlower().getFlowerId());
+                FlowerPrice flowerPrice = this.flowerPriceRepository.findByFlowerId(flowerFormulaDetail.getFlower().getId());
                 int unitQuantityUse = 1;
                 int i = flowerFormulaDetail.getQuantity();
                 while (i > flowerPrice.getQuantitySaleUnit()) {

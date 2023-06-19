@@ -13,5 +13,6 @@ public interface SalesOrderRepository extends JpaRepository<SalesOrder, Integer>
     SalesOrder findAllById(Integer id);
 
     List<SalesOrder> findAllByReceiverDateTimeGreaterThanEqualAndReceiverDateTimeLessThanAndStatus(Date receiverDateTimeFrom, Date receiverDateTimeTo, String status);
+    List<SalesOrder> findByStatusOrderByDeliveryDateTimeAsc(String status);
 
 }

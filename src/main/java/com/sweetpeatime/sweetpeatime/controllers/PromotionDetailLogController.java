@@ -105,7 +105,7 @@ public class PromotionDetailLogController {
             for(FlowerFormulaDetail flowerFormulaDetail: formulaDetail){
                 if (!flowerFormulaDetail.getFlower().getMainCategory().equals("หลัก")){
 
-                    List<Stock> stocks = this.stockRepository.findAllByFlowerIdAndLotGreaterThanEqualAndLotLessThanEqualAndFloristId(flowerFormulaDetail.getFlower().getFlowerId(),dateFrom, dateTo, promotionDetailLog1.getFlorist().getId());
+                    List<Stock> stocks = this.stockRepository.findAllByFlowerIdAndLotGreaterThanEqualAndLotLessThanEqualAndFloristId(flowerFormulaDetail.getFlower().getId(),dateFrom, dateTo, promotionDetailLog1.getFlorist().getId());
                     for(Stock stock: stocks){
                         stockAvailable = stockAvailable + stock.getQuantity();
                     }
