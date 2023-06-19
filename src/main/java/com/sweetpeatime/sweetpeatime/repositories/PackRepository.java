@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface PackRepository extends JpaRepository<Pack, Integer> {
-    List<Pack> findByFlowerIdOrderByUnitPackDsc(Integer flowerId);
+    List<Pack> findByFlowerIdOrderByUnitPackDesc(Integer flowerId);
 }

@@ -21,4 +21,9 @@ public class SalesOrderDetailService {
         return salesOrderDetailRepository.findByStatus(status);
     }
 
+    public void deleteAllById(List<Integer> ids){
+        salesOrderDetailRepository.deleteAllById(ids);
+//        return salesOrderDetailRepository.findByStatus(status);
+    }
+
 }

@@ -28,9 +28,18 @@ public class PurchaseOrderService {
         purchaseOrderRepository.save(purchaseOrder);
     }
     public List<PurchaseOrder> findByStatusAndOrderDate(String status, Date orderDate){
+        log.info("status: {}", status);
+        log.info("orderDate: {}", orderDate);
         return purchaseOrderRepository.findByStatusAndDate(status, orderDate);
     }
-    public PurchaseOrder create(PurchaseOrder po){
+
+    public List<PurchaseOrder> findByStatusAndDateForStock(String status, Date orderDate){
+        log.info("status: {}", status);
+        log.info("orderDate: {}", orderDate);
+        return purchaseOrderRepository.findByStatusAndDateForStock(status, orderDate);
+    }
+
+    public PurchaseOrder save(PurchaseOrder po){
         return purchaseOrderRepository.save(po);
     }
 

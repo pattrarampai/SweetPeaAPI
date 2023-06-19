@@ -3,20 +3,19 @@ package com.sweetpeatime.sweetpeatime.business;
 import com.sweetpeatime.sweetpeatime.common.constant.CommonConstant;
 import com.sweetpeatime.sweetpeatime.common.exception.CommonException;
 import com.sweetpeatime.sweetpeatime.common.utils.DateUtil;
+import com.sweetpeatime.sweetpeatime.common.utils.TransportationUtil;
+import com.sweetpeatime.sweetpeatime.dto.auto.CalculatePackDto;
 import com.sweetpeatime.sweetpeatime.dto.auto.CalculateSaleOrderDetailDto;
 import com.sweetpeatime.sweetpeatime.entities.*;
 import com.sweetpeatime.sweetpeatime.services.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import java.sql.Array;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,10 +29,10 @@ public class ConfirmSalesOrderBusinessService {
     private final PackService packService;
     private final PurchaseOrderDetailService purchaseOrderDetailService;
     private final LotService lotService;
-
-    // ORDER >> DRAFT > CONFIRM >> ไม่ใช่ draft >> COMPLETED
-
-
+    private final FlowerPriceService flowerPriceService;
+    private final SupplierService supplierService;
+    private final StockService stockService;
+    private final FlowerService flowerService;
 
     public void confirmOrder(){
         // select ORDER where status = 'CONFIRM';
@@ -42,103 +41,53 @@ public class ConfirmSalesOrderBusinessService {
             return;
         }
         SalesOrder firstSalesOrder = confirmedSaleOrderItems.get(0);
-        LocalDate saleOrderDeliveryDate = getSaleOrderDeliveryDate(firstSalesOrder.getDeliveryDateTime());
-        log.info("saleOrderDeliveryDate: {}", saleOrderDeliveryDate);// ต้องดึงของแต่ florist หรือไม่
+        LocalDate minOrderDate = getSaleOrderDeliveryDate(firstSalesOrder.getDeliveryDateTime());
+        log.info("minOrderDate: {}", minOrderDate);// ต้องดึงของแต่ florist หรือไม่
+
         List<SalesOrderDetail> saleOrderDetails = salesOrderDetailService.findByStatus(CommonConstant.SALE_ORDER_STATUS_CONFIRM);
         // get saleOrder detail ออกมาทั้งหมด ตามที่ CONFIRM แล้ว >> floristId >> order by florist
         log.info("{}", saleOrderDetails.size());
 
         List<CalculateSaleOrderDetailDto> calculateSaleOrderDetailsDto = new ArrayList();
 
+        log.info("calculate and prepare data process");
         for(SalesOrderDetail saleOrderDetail: saleOrderDetails){
             var saleOrder = saleOrderDetail.getSalesOrder();
-            var deliveryDate = DateUtil.toLocalDate(saleOrder.getDeliveryDateTime());
+            var orderDate = DateUtil.toLocalDate(saleOrder.getDeliveryDateTime()).minusDays(1);
             var formulaDetails = flowerFormulaDetailService.findAllByFlowerFormulaId(saleOrderDetail.getFlowerFormula().getId());
             for(var formulaDetail: formulaDetails){
                 var floristId = saleOrderDetail.getFlorist().getId();
                 var flower = formulaDetail.getFlower();
-                var lotDate = getLotDate(deliveryDate, flower.getLotNo(), flower.getLifeTime());
+                var lotDate = getLotDate(flower.getIsStock()?minOrderDate:orderDate, flower.getLotNo());
                 var qty = saleOrderDetail.getQuantity() * formulaDetail.getQuantity();
                 addCalculateSaleOrderDetailDto(calculateSaleOrderDetailsDto,
                         CalculateSaleOrderDetailDto.builder()
-                                .deliveryDate(deliveryDate)
+                                .orderDate(flower.getIsStock()?minOrderDate:orderDate)
                                 .lotDate(lotDate)
                                 .floristId(floristId)
                                 .flowerId(flower.getId())
                                 .liftTime(flower.getLifeTime() - 1)
                                 .isStock(flower.getIsStock())
                                 .quantity(qty)
+                                .saleOrderDetail(saleOrderDetail)
+                                .flowerFormulaDetails(formulaDetails)
                         .build());
             }
         }
 
+        log.info("purchase order process");
 
-
-
-
-
-
-
-
-
-//        sale-order-detail.qty * (flower-formular-detail.flower-id * flower-formular-detail.qty)
-//        >> จะได้รายการดอกไม้ กับจำนวน ที่ต้องสั่ง ของแต่ละ florist
-        // คำนวณอายุดอกไม้ของแต่ florist >> flower.lifttime -1 ของทุกตัว
-//        florist
-//            list
-//                flower-id
-//                qty
-//                lifetime หาได้จาก flower.lifetime -1 >> ใช้เป็นตัวเลข
-
-
-
-
-
-
-
-//        >> stock หรือ ไม่ stock ดูที่ flower>> ทำทีละ florist
-
-//        ไม่ stock : 0
-
-
-        // get sale order detail by confirmedSaleOrderItems
-
-        // group by lotDate, floristId, flowerId, sum(qty)
-
-
-        // select * from salesOrder where order salesOrderId in (select * from salesOrder where status = ?) and lotDate = ? and floristId = ? and flowerId = ?
-
-
-
-        // calculate for all order details group by florist
-        //flowerId, qty,
-                // 6 >> อายุดอกไม้ -1
-
-        // วันที่สั่งซื้อ = lotDate = คำนวณจากวันปัจจุบัน + อายุดอกไม้(จากข้อ 6)
-        //        วันที่สั่งซื้อ = วันที่ 5
-
-
-//        lotDay >> select * from lot where day = calWeekOfDay(วันที่สั่งซื้อ)
-//        หาวันที่ว่า lotDay ไปตกเป็นวันไหนได้บ้าง monday > 1,8,
-//        lotDate(4) = มากสุดที่น้อยกว่าวันที่ (วันที่สั่งซื้อ 5)
-//        select * from PO where date = ${lotDate}
-
-
-
-//        ไม่เจอใบสั่งซื้อ
-//                select * from pack where flowerId=${flowerId}
-//        เลือก qty ที่ใกล้เคียงที่สุด >> pack(1,5,10)  ต้องใช้(3) = pack(1) * 3
-//        เลือก qty ที่ใกล้เคียงที่สุด >> pack(1,5,10)  ต้องใช้(8) = pack(5) * 1 , pack(1) * 3
-
-//        lotDate < วันที่สั่งซื้อ
-//        for(var salesOrderDetail : confirmedSalesOrderDetails){
-//            var nearlyPreparationDate = getNearlyPreparationDate(confirmedSalesOrderDetails);
-//            processSalesOrderDetail(salesOrderDetail);
-//        }
+        for(var calculateSalesOrderDetail : calculateSaleOrderDetailsDto){
+            if(calculateSalesOrderDetail.getIsStock()){
+                processStockFlower(calculateSalesOrderDetail);
+            }else{
+                processNotStockFlower(calculateSalesOrderDetail);
+            }
+        }
 
     }
 
-    public void addCalculateSaleOrderDetailDto(List<CalculateSaleOrderDetailDto> calculateSaleOrderDetailsDto, CalculateSaleOrderDetailDto newItem){
+    public static void addCalculateSaleOrderDetailDto(List<CalculateSaleOrderDetailDto> calculateSaleOrderDetailsDto, CalculateSaleOrderDetailDto newItem){
         var selectedItem = calculateSaleOrderDetailsDto.stream()
                 .filter(item -> item.getLotDate().equals(newItem.getLotDate())
                         && item.getFloristId().equals(newItem.getFloristId())
@@ -158,31 +107,27 @@ public class ConfirmSalesOrderBusinessService {
 
     }
 
-    public LocalDate getLotDate(LocalDate deliveryDate, Integer lotNo, Integer liftTime){
-//        loop by flower-id
-//          flower.lot-no > มาหาใน lot.lot-no > แล้วดูว่ามี day อะไรบ้าง
-//        select * from lot where lotNo = flower.lot-no
-        LocalDate availableDate = deliveryDate.minusDays((liftTime - 1));
+    public LocalDate getLotDate(LocalDate orderDate, Integer lotNo){
         List<Lot> lots = lotService.findByLotNoOrderByDayAsc(lotNo);
         if(CollectionUtils.isEmpty(lots)){
             return null;
         }
-        int availableDateDayOfWeek = availableDate.getDayOfWeek().getValue();
-        log.info("availableDate: {}", availableDate);
-        log.info("availableDateDayOfWeek: {}", availableDateDayOfWeek);
+        int orderDateDayOfWeek = orderDate.getDayOfWeek().getValue();
+        log.info("orderDate: {}", orderDate);
+        log.info("orderDateDayOfWeek: {}", orderDateDayOfWeek);
         Integer minNextDiffDay = null;
 
         for(Lot lot: lots){
             Integer lotDayOfWeek = lot.getDay();
             log.info("process lotDayOfWeek: {}", lotDayOfWeek);
             Integer currentNextDiffDay = null;
-            if(lotDayOfWeek == availableDateDayOfWeek){
+            if(lotDayOfWeek == orderDateDayOfWeek){
                 currentNextDiffDay = 0;
-            }else if(lotDayOfWeek > availableDateDayOfWeek){
-                currentNextDiffDay = lotDayOfWeek - availableDateDayOfWeek;
-            }else if(lotDayOfWeek < availableDateDayOfWeek){
-                int availableDateDayOfWeekCal = 7 - availableDateDayOfWeek;
-                currentNextDiffDay = availableDateDayOfWeekCal + lotDayOfWeek;
+            }else if(lotDayOfWeek < orderDateDayOfWeek){
+                currentNextDiffDay = orderDateDayOfWeek - lotDayOfWeek;
+            }else if(lotDayOfWeek > orderDateDayOfWeek){
+                int lotDayOfWeekDayOfWeekCal = 7 - lotDayOfWeek;
+                currentNextDiffDay = lotDayOfWeekDayOfWeekCal + orderDateDayOfWeek;
             }
             log.info("currentNextDiffDay: {}", currentNextDiffDay);
             if(minNextDiffDay == null){
@@ -198,142 +143,370 @@ public class ConfirmSalesOrderBusinessService {
         if(minNextDiffDay == null){
             return null;
         }
-        return availableDate.plusDays(minNextDiffDay);
-//        จะได้ day of week
-//        วันที่สามารถสั่งได้ = วันที่สั่งซื้อ - อายุดอกไม้(หลัง - 1 แล้ว)
-//        วันที่สามารถสั่งได้ = (10/04/2023) - ((7 ก่อนลบ)-1) = (04/04/2023)
-//        ให้เลือกตั้งแต่วันที่ (04/04/2023) ไปได้เลย โดยเป็น lot-date >= (04/04/2023) และต้องใกล้กับวันที่สั่งซื้อมากสุด หรือเป็นวันเดียวกันกับวันที่สั่งซื้อเลยก็ได้
-//        lot-date >= (04/04/2023) < ไม่เกินวันที่สั่งซื้อ
-//        ต้องเอารายการ lot มาแปลงเป็นวันที่แล้วเทียบ
-//                เลือก lot ล่าสุด >
-//        วันที่สั่งซื้อ ย้อนหลังไป 7 วัน >> ควรจะได้มาสัก 1 วัน > เรียกว่า lot-date
-//        1 > วันที่เท่าไหร่ ในสัปดาห์ปัจจุบัน
-//        3
-//        5
-
+        return orderDate.minusDays(minNextDiffDay);
     }
-    public void processSalesOrderDetail(SalesOrderDetail salesOrderDetail){
-        var formulaDetails = flowerFormulaDetailService.findAllByFlowerFormulaId(salesOrderDetail.getFlowerFormula().getId());
-        for(var formulaDetail: formulaDetails){
-            var flower = formulaDetail.getFlower();
-            if(flower.getIsStock()){
-                processStockFlower(salesOrderDetail, formulaDetail);
+
+    public void processStockFlower(CalculateSaleOrderDetailDto calculateSalesOrderDetail) {
+        var qty = calculateSalesOrderDetail.getQuantity();
+        var lotDate = calculateSalesOrderDetail.getLotDate();
+        var floristId = calculateSalesOrderDetail.getFloristId();
+        var flowerId = calculateSalesOrderDetail.getFlowerId();
+        var orderDate = calculateSalesOrderDetail.getOrderDate();
+        var liftTime = calculateSalesOrderDetail.getLiftTime();
+        var expireDate = orderDate.minusDays(liftTime);
+        var stocks = stockService.findAllByFloristIdAndFlowerId(calculateSalesOrderDetail.getFloristId(), calculateSalesOrderDetail.getFlowerId());
+        var remaining = 0;
+        if(!CollectionUtils.isEmpty(stocks)){
+            for(Stock stockItem : stocks){
+                var stockLotDate = DateUtil.toLocalDate(stockItem.getLot());
+                if(stockLotDate.compareTo(expireDate) >= 0){
+                    remaining += stockItem.getQuantity();
+                }
+            }
+        }
+
+        var poOrderQty = qty;
+        if(remaining > 0){
+            if(poOrderQty > remaining){
+                poOrderQty = poOrderQty - remaining;
             }else{
-                processNotStockFlower(salesOrderDetail, formulaDetail);
+                poOrderQty = 0;
+            }
+        }
+        if(poOrderQty > 0) {
+            // ต้องซื้อเพิ่ม
+            calculateSalesOrderDetail.setQuantity(poOrderQty);
+
+            // หาใบ PO ด้วย
+//            PO-date <= calculateSalesOrderDetail.getOrderDate();
+            var draftPurchaseOrders = getDraftPurchaseOrderForStock(orderDate);
+            PurchaseOrder po = null;
+
+            if (!CollectionUtils.isEmpty(draftPurchaseOrders)) { // draft PO is exists
+//            // ถ้ามี PO
+//                findPODetail ที่มี flowerId และ floristId เดียวกัน
+//                    ถ้าเจอ > ลบรายการออกแล้วสร้างใหม่
+//                    ถ้าไม่เจอ > สร้างใหม่
+                po = draftPurchaseOrders.get(0);
+                var poId = po.getId();
+                var poDetails = po.getPurchaseOrderDetail();
+
+                // remove old item
+                if (!CollectionUtils.isEmpty(poDetails)) {
+                    var existingPoDetails = poDetails.stream()
+                            .filter(item -> item.getFloristId().equals(floristId) && item.getFlowerId().equals(flowerId)).collect(Collectors.toList());
+                    // remove old pack items by lotDate, floristId and flowerId
+                    if (!CollectionUtils.isEmpty(existingPoDetails)) {
+                        List<Integer> existingPoDetailsId = existingPoDetails
+                                .stream()
+                                .map((obj) -> obj.getId())
+                                .collect(Collectors.toList());
+                        purchaseOrderDetailService.deleteAllById(existingPoDetailsId);
+                        po = purchaseOrderService.findById(poId);
+                        poDetails = po.getPurchaseOrderDetail();
+                    }
+                }
+
+                var flowerOpt = flowerService.findById(flowerId);
+                if(!flowerOpt.isPresent()){
+                    throw new CommonException("invalid flower id");
+                }
+                var flower = flowerOpt.get();
+                lotDate = getLotDate(DateUtil.toLocalDate(po.getDate()), flower.getLotNo());
+                var calculatePacks = calculatePack(calculateSalesOrderDetail);
+                if(CollectionUtils.isEmpty(calculatePacks)){
+                    throw new CommonException("calculate pack is empty");
+                }
+                // add new pack items
+                for(CalculatePackDto calculatePackDto: calculatePacks){
+                    // get price by priceId
+                    var pack = calculatePackDto.getPack();
+                    var packQty = calculatePackDto.getQuantity();
+                    var totalWeight = pack.getPackWeight() * packQty;
+                    var vehicleType = TransportationUtil.getVehicleType(totalWeight);
+                    var transportationFee = TransportationUtil.getTransportationFee(vehicleType);
+                    var flowerPrice = flowerPriceService.findById(pack.getPriceId());
+                    var totalPrice = Double.valueOf(flowerPrice.getPrice() * packQty);
+                    var supplier = supplierService.findFirstByDefault();
+                    poDetails.add(PurchaseOrderDetail.builder()
+                            .purchaseOrderId(po.getId())
+                            .flowerId(calculateSalesOrderDetail.getFlowerId())
+                            .packId(pack.getId())
+                            .quantity(packQty)
+                            .supplierId(supplier.getId())
+                            .priceId(pack.getPriceId())
+                            .lot(DateUtil.getDate(lotDate))
+                            .floristId(calculateSalesOrderDetail.getFloristId())
+                            .receivedQty(0)
+                            .price(totalPrice)
+                            .weight(totalWeight)
+                            .vehicle(TransportationUtil.getVehicleType(totalWeight))
+                            .transportationFee(transportationFee)
+                            .build());
+                }
+
+                // calculate total for PO
+                double totalPrice = 0;
+                double totalTransportationFee = 0;
+                for(PurchaseOrderDetail purchaseOrderDetail: poDetails){
+                    totalPrice += purchaseOrderDetail.getPrice();
+                    totalTransportationFee += purchaseOrderDetail.getTransportationFee();
+                }
+                // update PO and PO Detail
+                po.setTotal(totalPrice);
+                po.setTransportationFee(totalTransportationFee);
+                purchaseOrderService.save(po);
+            } else {
+//            // ถ้าไม่มี PO
+                    var formulaDetails = calculateSalesOrderDetail.getFlowerFormulaDetails();
+                    var maxLiftTime = 0;
+                    log.info("---- calculate maxLiftTime start");
+                    for (var formulaDetail : formulaDetails) {
+                        log.info("  formulaDetail.getFlower().getLifeTime(): {}", formulaDetail.getFlower().getLifeTime());
+                        if (formulaDetail.getFlower().getLifeTime() > maxLiftTime) {
+                            maxLiftTime = formulaDetail.getFlower().getLifeTime();
+                        }
+                    }
+                    log.info("  result maxLiftTime: {}", maxLiftTime);
+                    log.info("---- calculate maxLiftTime end");
+
+//            PO-date <= calculateSalesOrderDetail.getOrderDate().plusDays(maxLiftTime - 1);
+                    var maxLiftTimeDate = calculateSalesOrderDetail.getOrderDate().plusDays(maxLiftTime - 1);
+                    var maxLiftTimeDraftPurchaseOrders = getDraftPurchaseOrderForStock(maxLiftTimeDate);
+                    if(!CollectionUtils.isEmpty(maxLiftTimeDraftPurchaseOrders)){
+//              // ถ้ามี
+                        var maxLiftTimePo = maxLiftTimeDraftPurchaseOrders.get(0);
+//                เปลี่ยนจาก draft > cancel
+                        // update
+                        maxLiftTimePo.setStatus(CommonConstant.PO_STATUS_CANCEL);
+                        purchaseOrderService.save(maxLiftTimePo);
+                    }
+//              // ถ้าไม่มี หรือ มี(แต่ถูกยกเลิกก่อนหน้าแล้ว)
+                // สร้างใหม่ PO-date จะเป็น minOrderDate
+                    po = purchaseOrderService.save(PurchaseOrder.builder()
+                            .date(DateUtil.getDate(orderDate))
+                            .status(CommonConstant.PO_STATUS_DRAFT)
+                            .total(0d)
+                            .transportationFee(0d)
+                            .purchaseOrderDetail(new ArrayList<>())
+                            .build());
+
+                    var poDetails = po.getPurchaseOrderDetail();
+                    var calculatePacks = calculatePack(calculateSalesOrderDetail);
+                    if(CollectionUtils.isEmpty(calculatePacks)){
+                        throw new CommonException("calculate pack is empty");
+                    }
+                    // add new pack items
+                    for(CalculatePackDto calculatePackDto: calculatePacks){
+                        // get price by priceId
+                        var pack = calculatePackDto.getPack();
+                        var packQty = calculatePackDto.getQuantity();
+                        var totalWeight = pack.getPackWeight() * packQty;
+                        var vehicleType = TransportationUtil.getVehicleType(totalWeight);
+                        var transportationFee = TransportationUtil.getTransportationFee(vehicleType);
+                        var flowerPrice = flowerPriceService.findById(pack.getPriceId());
+                        var totalPrice = Double.valueOf(flowerPrice.getPrice() * packQty);
+                        var supplier = supplierService.findFirstByDefault();
+                        poDetails.add(PurchaseOrderDetail.builder()
+                                .purchaseOrderId(po.getId())
+                                .flowerId(calculateSalesOrderDetail.getFlowerId())
+                                .packId(pack.getId())
+                                .quantity(packQty)
+                                .supplierId(supplier.getId())
+                                .priceId(pack.getPriceId())
+                                .lot(DateUtil.getDate(lotDate))
+                                .floristId(calculateSalesOrderDetail.getFloristId())
+                                .receivedQty(0)
+                                .price(totalPrice)
+                                .weight(totalWeight)
+                                .vehicle(TransportationUtil.getVehicleType(totalWeight))
+                                .transportationFee(transportationFee)
+                                .build());
+                    }
+
+                    // calculate total for PO
+                    double totalPrice = 0;
+                    double totalTransportationFee = 0;
+                    for(PurchaseOrderDetail purchaseOrderDetail: poDetails){
+                        totalPrice += purchaseOrderDetail.getPrice();
+                        totalTransportationFee += purchaseOrderDetail.getTransportationFee();
+                    }
+                    // update PO and PO Detail
+                    po.setTotal(totalPrice);
+                    po.setTransportationFee(totalTransportationFee);
+                    purchaseOrderService.save(po);
             }
         }
     }
-    public void processStockFlower(SalesOrderDetail salesOrderDetail, FlowerFormulaDetail formulaDetail){ // 7
-        // find by flower lifetime
-        var stocks = new ArrayList<Stock>();
-        if(!CollectionUtils.isEmpty(stocks)){ // exists
-
-            return;
+    @Transactional
+    public void processNotStockFlower(CalculateSaleOrderDetailDto calculateSaleOrderDetailDto){ // 7
+        var calculatePacks = calculatePack(calculateSaleOrderDetailDto);
+        if(CollectionUtils.isEmpty(calculatePacks)){
+            throw new CommonException("calculate pack is empty");
         }
-    }
-    public void processNotStockFlower(SalesOrderDetail salesOrderDetail, FlowerFormulaDetail formulaDetail){ // 7
-        var floristId = salesOrderDetail.getFlorist().getId();
-        var flower = formulaDetail.getFlower();
-        var saleOrder = salesOrderDetail.getSalesOrder();
-        var deliveryDate = DateUtil.toLocalDate(saleOrder.getDeliveryDateTime());
-
-        var lotDate = getLotDate(deliveryDate, flower.getLotNo(), flower.getLifeTime());
-        var addFlowerQty = salesOrderDetail.getQuantity() * formulaDetail.getQuantity();
-        var draftPurchaseOrders = getDraftPurchaseOrder(lotDate);
+        var orderDate = calculateSaleOrderDetailDto.getOrderDate();
+        var lotDate = calculateSaleOrderDetailDto.getLotDate();
+        var floristId = calculateSaleOrderDetailDto.getFloristId();
+        var flowerId = calculateSaleOrderDetailDto.getFlowerId();
+        var draftPurchaseOrders = getDraftPurchaseOrder(orderDate);
+        PurchaseOrder po = null;
         if(CollectionUtils.isEmpty(draftPurchaseOrders)){ // draft PO is not exists
-            draftPurchaseOrders = new ArrayList<PurchaseOrder>();
-            draftPurchaseOrders.add(purchaseOrderService.create(PurchaseOrder.builder()
-                    .date(DateUtil.getDate(lotDate))
+            po = purchaseOrderService.save(PurchaseOrder.builder()
+                    .date(DateUtil.getDate(orderDate))
                     .status(CommonConstant.PO_STATUS_DRAFT)
                     .total(0d)
                     .transportationFee(0d)
-                    .build()));
+                    .purchaseOrderDetail(new ArrayList<>())
+                    .build());
+        }else{
+            po = draftPurchaseOrders.get(0);
         }
-        var draftPurchaseOrder = draftPurchaseOrders.get(0);
-        var draftPurchaseOrderDetails = purchaseOrderDetailService.findByPurchaseOrderIdAndFloristIdAndFlowerId(draftPurchaseOrder.getId(), floristId, flower.getId());
-        if(CollectionUtils.isEmpty(draftPurchaseOrderDetails)){
-
+        var poId = po.getId();
+        var poDetails = po.getPurchaseOrderDetail();
+        if(!CollectionUtils.isEmpty(poDetails)){
+            var existingPoDetails = poDetails.stream()
+                    .filter(item-> DateUtil.toLocalDate(item.getLot()).compareTo(lotDate) == 0 && item.getFloristId().equals(floristId) && item.getFlowerId().equals(flowerId)).collect(Collectors.toList());
+            // remove old pack items by lotDate, floristId and flowerId
+            if(!CollectionUtils.isEmpty(existingPoDetails)){
+                List<Integer> existingPoDetailsId = existingPoDetails
+                        .stream()
+                        .map((obj) -> obj.getId())
+                        .collect(Collectors.toList());
+                purchaseOrderDetailService.deleteAllById(existingPoDetailsId);
+                po = purchaseOrderService.findById(poId);
+                poDetails = po.getPurchaseOrderDetail();
+            }
         }
 
+        // add new pack items
+        for(CalculatePackDto calculatePackDto: calculatePacks){
+            // get price by priceId
+            var pack = calculatePackDto.getPack();
+            var packQty = calculatePackDto.getQuantity();
+            var totalWeight = pack.getPackWeight() * packQty;
+            var vehicleType = TransportationUtil.getVehicleType(totalWeight);
+            var transportationFee = TransportationUtil.getTransportationFee(vehicleType);
+            var flowerPrice = flowerPriceService.findById(pack.getPriceId());
+            var totalPrice = Double.valueOf(flowerPrice.getPrice() * packQty);
+            var supplier = supplierService.findFirstByDefault();
+            poDetails.add(PurchaseOrderDetail.builder()
+                    .purchaseOrderId(po.getId())
+                    .flowerId(calculateSaleOrderDetailDto.getFlowerId())
+                    .packId(pack.getId())
+                    .quantity(packQty)
+                    .supplierId(supplier.getId())
+                    .priceId(pack.getPriceId())
+                    .lot(DateUtil.getDate(lotDate))
+                    .floristId(calculateSaleOrderDetailDto.getFloristId())
+                    .receivedQty(0)
+                    .price(totalPrice)
+                    .weight(totalWeight)
+                    .vehicle(TransportationUtil.getVehicleType(totalWeight))
+                    .transportationFee(transportationFee)
+                    .build());
+        }
 
-
-//        var existsPurchaseOrderDetailByFlowerIdAndFloristId = draftPurchaseOrderDetails.stream()
-//                .filter(item ->
-//                        item.getFlowerId().equals(flower.getId()) &&
-//                                item.getFloristId().equals(salesOrderDetail.getFlorist().getId()))
-//                .collect(Collectors.toList());
-
-
-//        PurchaseOrderDetail purchaseOrderDetailByFlowerIdAndFloristId = null;
-//        if(CollectionUtils.isEmpty(existsPurchaseOrderDetailByFlowerIdAndFloristId)){
-//            purchaseOrderDetailByFlowerIdAndFloristId = PurchaseOrderDetail.builder()
-//                    .purchaseOrder(draftPurchaseOrder)
-//                    .flowerId(flower.getId())
-//                    .floristId(salesOrderDetail.getFlorist().getId())
-//                    .lot(DateUtil.getDate(lotDate))
-//                    .quantity(0)
-//                    .receivedQty(0)
-////                    .vehicle()
-//                    .build();
-//        }
-        calculatePurchaseOrderDetail(null, addFlowerQty);
-//        var purchaseOrderSaved = purchaseOrderDetailService.save(purchaseOrderDetailByFlowerIdAndFloristId);
-        // re-calculate
+        // calculate total for PO
+        double totalPrice = 0;
+        double totalTransportationFee = 0;
+        for(PurchaseOrderDetail purchaseOrderDetail: poDetails){
+            totalPrice += purchaseOrderDetail.getPrice();
+            totalTransportationFee += purchaseOrderDetail.getTransportationFee();
+        }
+        // update PO and PO Detail
+        po.setTotal(totalPrice);
+        po.setTransportationFee(totalTransportationFee);
+        purchaseOrderService.save(po);
     }
-//    public LocalDate getLotDate(Flower flower){ // 7B
-//        return LocalDate.now();
-//    }
     public List<PurchaseOrder> getDraftPurchaseOrder(LocalDate orderDate){ //8B
         return purchaseOrderService.findByStatusAndOrderDate(CommonConstant.PO_STATUS_DRAFT, DateUtil.getDate(orderDate));
     }
+    public List<PurchaseOrder> getDraftPurchaseOrderForStock(LocalDate orderDate){ //8B
+        return purchaseOrderService.findByStatusAndDateForStock(CommonConstant.PO_STATUS_DRAFT, DateUtil.getDate(orderDate));
+    }
     public List<Pack> getPack(Integer flowerId){
         // get pack by flowerId order by unitPack
-        return packService.findByFlowerIdOrderByUnitPackDsc(flowerId);
+        log.info("flowerId: {}", flowerId);
+        return packService.findByFlowerIdOrderByUnitPackDesc(flowerId);
     }
-    public void calculatePurchaseOrderDetail(PurchaseOrderDetail purchaseOrderDetail, Integer addQty){
-
-        var totalQty = purchaseOrderDetail.getQuantity() + addQty;
-        var packs = getPack(purchaseOrderDetail.getFlowerId());
+    public List<CalculatePackDto> calculatePack(CalculateSaleOrderDetailDto calculateSaleOrderDetailDto){
+        List<CalculatePackDto> result = new ArrayList<>();
+        var totalQty = calculateSaleOrderDetailDto.getQuantity();
+        var packs = getPack(calculateSaleOrderDetailDto.getFlowerId());
         // calculate pack
         log.info("packs: {}", packs);
         if(CollectionUtils.isEmpty(packs)){
-            throw new CommonException("Pack does not exists for flowerId["+purchaseOrderDetail.getFlowerId()+"]");
+            throw new CommonException("Pack does not exists for flowerId["+calculateSaleOrderDetailDto.getFlowerId()+"]");
         }
-
-
         var remainingQty = totalQty;
-        for(;remainingQty == 0;){
+        for(;remainingQty > 0;){
+            Pack selectedPack = null;
             for(Pack pack: packs){
-                var unitPack = pack.getUnitPack();
-                if(unitPack <= remainingQty){
-
+                if(remainingQty > packs.get(0).getUnitPack()){
+                    selectedPack = packs.get(0);
+                }else{
+                    var unitPack = pack.getUnitPack();
+                    if(unitPack >= remainingQty){
+                        selectedPack = pack;
+                    }
                 }
             }
+            addPack(result, selectedPack);
+            remainingQty -= selectedPack.getUnitPack();
+        }
+        return result;
+    }
 
-            Pack minUnitPack = packs.get(packs.size()-1);
-            if(minUnitPack.getUnitPack() > remainingQty){
-
+    public List<CalculatePackDto> calculatePack_old(CalculateSaleOrderDetailDto calculateSaleOrderDetailDto){
+        List<CalculatePackDto> result = new ArrayList<>();
+        var totalQty = calculateSaleOrderDetailDto.getQuantity();
+        var packs = getPack(calculateSaleOrderDetailDto.getFlowerId());
+        // calculate pack
+        log.info("packs: {}", packs);
+        if(CollectionUtils.isEmpty(packs)){
+            throw new CommonException("Pack does not exists for flowerId["+calculateSaleOrderDetailDto.getFlowerId()+"]");
+        }
+        var remainingQty = totalQty;
+        if(packs.get(0).getUnitPack() >= remainingQty){
+            Pack selectedPack = null;
+            for(Pack pack: packs){
+                var unitPack = pack.getUnitPack();
+                if(unitPack >= remainingQty){
+                    selectedPack = pack;
+                }
+            }
+            addPack(result, selectedPack);
+        }else{
+            for(;remainingQty > 0;){
+                for(Pack pack: packs){
+                    var unitPack = pack.getUnitPack();
+                    for(;unitPack <= remainingQty;){
+                        addPack(result, pack);
+                        remainingQty = remainingQty - unitPack;
+                    }
+                }
+                if(remainingQty > 0){
+                    Pack minUnitPack = packs.get(packs.size()-1);
+                    if(minUnitPack.getUnitPack() > remainingQty){
+                        addPack(result, minUnitPack);
+                        remainingQty = remainingQty - minUnitPack.getUnitPack();
+                    }
+                }
             }
         }
-
-
-
-
-
-//        purchaseOrderDetail.setSupplierId();
-//        purchaseOrderDetail.setPackId();
-//        purchaseOrderDetail.setQuantity();
-
+        return result;
     }
-//    public boolean inStock(){
-//
-//    }
 
+    public static void addPack(List<CalculatePackDto> totalPack, Pack newPack){
+        var filterItem = totalPack.stream().filter(item-> item.getPack().getId().equals(newPack.getId())).findFirst().orElse(null);
+        if(filterItem == null){
+            totalPack.add(CalculatePackDto.builder()
+                            .pack(newPack)
+                            .quantity(1)
+                            .build());
+        }else{
+            filterItem.setQuantity(filterItem.getQuantity() + 1);
+        }
+    }
 
-// 7A วันที่สั่งซื้อ มาเทียบกับ lot ใน stock >> อายุดอกไม้ใน stock คงเหลือ
-// อายุดอกไม้ใน stock คงเหลือ >= อายุของดอกไม้
-// >> แสดงว่าใช้ใน stock ได้ >> ดึงจำนวน qty ออกมา
-// >> ถ้ามีพอ >> หักออก จากจำนวน qty จบเลย
-// >> ถ้ามีไม่พอ >> stock(2) แต่ต้องใช้(5) >> ตัด stock ก่อน 2(เท่าที่มี)
-//          ยังขาดเท่าไหร่ จะต้องซื้อเพิ่ม
 }

@@ -15,6 +15,7 @@ public interface StockRepository extends JpaRepository<Stock, Integer>{
     Stock findTopByFlowerIdAndFloristIdOrderByLotDesc(Integer flowerId, Integer floristId);
 
     List<Stock> findAllByFlowerId(Integer flowerId);
+    List<Stock> findAllByFloristIdAndFlowerId(Integer floristId, Integer flowerId);
     List<Stock> findAllByFloristIdOrderByQuantityDesc(Integer floristId);
 
     List<Stock> findAllByFlowerIdAndLotGreaterThanEqualAndLotLessThanEqualAndFloristId(Integer flowerId,Date dateFrom, Date dateTo, Integer floristId);

@@ -13,7 +13,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PackService {
     private final PackRepository packRepository;
-    public List<Pack> findByFlowerIdOrderByUnitPackDsc(Integer flowerId){
-        return packRepository.findByFlowerIdOrderByUnitPackDsc(flowerId);
+    public List<Pack> findByFlowerIdOrderByUnitPackDesc(Integer flowerId){
+        return packRepository.findByFlowerIdOrderByUnitPackDesc(flowerId);
     }
 }

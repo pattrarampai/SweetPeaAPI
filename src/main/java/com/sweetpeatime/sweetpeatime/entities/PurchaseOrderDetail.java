@@ -1,9 +1,6 @@
 package com.sweetpeatime.sweetpeatime.entities;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Date;
 
@@ -16,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 @Entity
 @Table(name = "PurchaseOrderDetail")
 public class PurchaseOrderDetail {
@@ -35,7 +33,7 @@ public class PurchaseOrderDetail {
     private Double price;
     private Double weight;
     private String vehicle; // BIKE, CAR
-    private Double transportationFree;// >> 300,300
+    private Double transportationFee;// >> 300,300
 
 //    private Double // transportation > เอาน้ำหนักรวมของ 1 ช่าง > หาว่าจะส่งโดยมอเตอร์ไซต์หรือรถยนต์ตามน้ำหนักรวม >
 //    น้ำหนักรวม <= 10 >> มอเตอร์ไซต์
@@ -46,9 +44,10 @@ public class PurchaseOrderDetail {
 
 
 
-    @JsonBackReference
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "purchaseOrderId")
-    private PurchaseOrder purchaseOrder;
+//    @JsonBackReference
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "purchaseOrderId")
+//private PurchaseOrder purchaseOrder;
+    private Integer purchaseOrderId;
     
 }

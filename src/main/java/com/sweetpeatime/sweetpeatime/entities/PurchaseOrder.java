@@ -1,9 +1,7 @@
 package com.sweetpeatime.sweetpeatime.entities;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.util.Date;
 import java.util.List;
 
@@ -16,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 @Entity
 @Table(name = "PurchaseOrder")
 public class PurchaseOrder {
@@ -25,13 +24,14 @@ public class PurchaseOrder {
     private Integer id;
 
     @JsonFormat(pattern="yyyy-MM-dd", timezone="Asia/Bangkok")
-    private Date date;
+    private Date date; //orderDate
     private String status;
     private Double total;
     private Double transportationFee;
 
     @JsonManagedReference
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "purchaseOrderId")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "purchaseOrderId", referencedColumnName = "id")
     private List<PurchaseOrderDetail> purchaseOrderDetail;
+//    private Integer purchaseOrderId;
 }

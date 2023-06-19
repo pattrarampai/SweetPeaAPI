@@ -19,4 +19,7 @@ public class PurchaseOrderDetailService {
     public PurchaseOrderDetail save(PurchaseOrderDetail purchaseOrderDetail){
         return purchaseOrderDetailRepository.save(purchaseOrderDetail);
     }
+    public void deleteAllById(List<Integer> ids){
+        purchaseOrderDetailRepository.deleteAllById(ids);
+    }
 }

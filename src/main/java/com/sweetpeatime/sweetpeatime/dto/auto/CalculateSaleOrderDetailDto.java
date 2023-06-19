@@ -1,19 +1,24 @@
 package com.sweetpeatime.sweetpeatime.dto.auto;
 
 import com.sweetpeatime.sweetpeatime.entities.Flower;
+import com.sweetpeatime.sweetpeatime.entities.FlowerFormulaDetail;
+import com.sweetpeatime.sweetpeatime.entities.SalesOrderDetail;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Data
 public class CalculateSaleOrderDetailDto {
-    private LocalDate deliveryDate;
+    private SalesOrderDetail saleOrderDetail;
+    private List<FlowerFormulaDetail> flowerFormulaDetails;
+    private LocalDate orderDate;
     private LocalDate lotDate;
     private Integer floristId;
     private Integer flowerId;
