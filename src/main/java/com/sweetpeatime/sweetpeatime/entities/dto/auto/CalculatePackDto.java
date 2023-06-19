@@ -1,4 +1,4 @@
-package com.sweetpeatime.sweetpeatime.dto.auto;
+package com.sweetpeatime.sweetpeatime.entities.dto.auto;
 
 import com.sweetpeatime.sweetpeatime.entities.Pack;
 import com.sweetpeatime.sweetpeatime.entities.SalesOrderDetail;

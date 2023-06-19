@@ -10,4 +10,6 @@ public interface FlowerPriceRepository extends JpaRepository<FlowerPrice, Intege
     FlowerPrice findByFlowerId(Integer flowerId);
 
     List<FlowerPrice> findAllByFlowerId(Integer flowerId);
+
+    List<FlowerPrice> findByFlower_IdAndPackId(Integer flowerId, Integer packId);
 }

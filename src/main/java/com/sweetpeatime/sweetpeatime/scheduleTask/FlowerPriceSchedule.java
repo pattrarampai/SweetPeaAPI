@@ -63,24 +63,24 @@ public class FlowerPriceSchedule {
 
         for (FlowerFormula flowerFormula: flowerFormulas) {
             List<FlowerFormulaDetail> flowerFormulaDetails = this.flowerFormulaDetailRepository.findAllByFlowerFormulaId(flowerFormula.getId());
-            for (FlowerFormulaDetail flowerFormulaDetail: flowerFormulaDetails) {
-                FlowerPrice flowerPrice = this.flowerPriceRepository.findByFlowerId(flowerFormulaDetail.getFlower().getId());
-                int unitQuantityUse = 1;
-                int i = flowerFormulaDetail.getQuantity();
-                while (i > flowerPrice.getQuantitySaleUnit()) {
-                    unitQuantityUse++;
-                    i = i - flowerPrice.getQuantitySaleUnit();
-                }
-                flowerFormulaPrice += flowerPrice.getPrice() * unitQuantityUse;
-            }
-            flowerFormulaPrice += (flowerFormulaPrice*percentProfit) / 100;
+//            for (FlowerFormulaDetail flowerFormulaDetail: flowerFormulaDetails) {
+            //              FlowerPrice flowerPrice = this.flowerPriceRepository.findByFlowerId(flowerFormulaDetail.getFlower().getFlowerId());
+            //               int unitQuantityUse = 1;
+            //               int i = flowerFormulaDetail.getQuantity();
+            //               while (i > flowerPrice.getQuantitySaleUnit()) {
+            //                   unitQuantityUse++;
+            //                   i = i - flowerPrice.getQuantitySaleUnit();
+            //              }
+            //              flowerFormulaPrice += flowerPrice.getPrice() * unitQuantityUse;
+        }
+        flowerFormulaPrice += (flowerFormulaPrice*percentProfit) / 100;
 
 //            if (flowerFormulaPrice % 100 != 0) {
 //                flowerFormulaPrice = (flowerFormulaPrice - (flowerFormulaPrice % 100)) + 90;
 //            }
-            flowerFormula.setPrice(flowerFormulaPrice);
-            this.flowerFormulaRepository.saveAndFlush(flowerFormula);
-            flowerFormulaPrice = 0;
-        }
+//            flowerFormula.setPrice(flowerFormulaPrice);
+//            this.flowerFormulaRepository.saveAndFlush(flowerFormula);
+        flowerFormulaPrice = 0;
+        //      }
     }
 }

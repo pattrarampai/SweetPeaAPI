@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Integer> {
@@ -30,4 +31,6 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, In
     List<PurchaseOrder> findByDateBetweenAndStatus(Date startDate, Date endDate, String status);
 
     List<PurchaseOrder> findByStatus(String status);
+
+    Optional<PurchaseOrder> findById(Integer id);
 }

@@ -1,8 +1,8 @@
 package com.sweetpeatime.sweetpeatime.controllers;
 
-import com.sweetpeatime.sweetpeatime.dto.AddStockDTO;
-import com.sweetpeatime.sweetpeatime.dto.ChangeStockDTO;
-import com.sweetpeatime.sweetpeatime.dto.DeleteStockDTO;
+import com.sweetpeatime.sweetpeatime.entities.dto.AddStockDTO;
+import com.sweetpeatime.sweetpeatime.entities.dto.ChangeStockDTO;
+import com.sweetpeatime.sweetpeatime.entities.dto.DeleteStockDTO;
 import com.sweetpeatime.sweetpeatime.entities.*;
 import com.sweetpeatime.sweetpeatime.repositories.*;
 import com.sweetpeatime.sweetpeatime.wrapper.StockWrapper;

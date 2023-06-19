@@ -29,5 +29,9 @@ public class FlowerPriceController {
     public List<FlowerPrice> getFlowerPriceByFlowerId(@PathVariable("flowerId") Integer flowerId) throws ParseException {
         return flowerPriceRepository.findAllByFlowerId(flowerId);
     }
-    
+
+    @GetMapping(value = "/flowerPriceByPack")
+    public List<FlowerPrice> getFlowerPriceByPack(@RequestParam("flowerId") Integer flowerId,@RequestParam("packId") Integer packId) throws ParseException {
+        return this.flowerPriceRepository.findByFlower_IdAndPackId(flowerId,packId);
+    }
 }

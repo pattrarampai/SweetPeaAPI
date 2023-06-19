@@ -11,6 +11,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:4200")
@@ -124,4 +125,7 @@ public class PurchaseOrderController {
         purchaseOrderRepository.save(purchaseOrder);
     }
 
+    @GetMapping(value="/getPurchaseOrderById/{purchaseOrderId}")
+    public Optional<PurchaseOrder> getPurchaseOrderById(@PathVariable ("purchaseOrderId") Integer purchaseOrderId) throws ParseException
+    {return this.purchaseOrderRepository.findById(purchaseOrderId);}
 }

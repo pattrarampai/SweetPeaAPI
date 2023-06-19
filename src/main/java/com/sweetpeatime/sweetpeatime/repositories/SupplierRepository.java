@@ -14,4 +14,5 @@ public interface SupplierRepository extends JpaRepository<Supplier, Integer> {
 
     Supplier findSupplierByName(String name);
     Optional<Supplier> findByDefaultActive(boolean active);
+
 }
